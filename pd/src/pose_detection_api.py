@@ -1,3 +1,5 @@
+# app.py
+
 from flask import Flask, Response, render_template, request
 import cv2
 import numpy as np
@@ -17,25 +19,28 @@ pose_detection_active = False
 def index():
     return render_template('index.html')
 
-# Route to receive webcam frames from frontend
-@app.route('/send_frame', methods=['POST'])
-def receive_frame():
-    # Decode base64 string to image
-    frame_data = request.form['frame']
-    frame_bytes = base64.b64decode(frame_data)
-    nparr = np.frombuffer(frame_bytes, np.uint8)
-    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+# Function to capture video frames
+def generate_frames():
+    camera = cv2.VideoCapture(0)  # Access the first camera (index 0)
+    if not camera.isOpened():
+        raise RuntimeError("Could not open camera.")
+    
+    while True:
+        success, frame = camera.read()
+        if not success:
+            raise RuntimeError("Failed to read frame from camera.")
+        
+        # Perform pose detection if active
+        if pose_detection_active:
+            frame = detect_pose(frame)
+        
+        # Encode frame to base64 string
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+        frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
 
-    # Perform pose detection if active
-    if pose_detection_active:
-        frame = detect_pose(frame)
-
-    # Encode frame to base64 string
-    _, buffer = cv2.imencode('.jpg', frame)
-    frame_bytes = buffer.tobytes()
-    frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
-
-    return frame_base64
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_base64.encode() + b'\r\n')
 
 # Function to detect poses
 def detect_pose(frame):
@@ -50,6 +55,22 @@ def detect_pose(frame):
         mp.solutions.drawing_utils.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         
     return frame
+
+@app.route('/start_detection', methods=['POST'])
+def start_detection():
+    global pose_detection_active
+    pose_detection_active = True
+    return "Pose detection started."
+
+@app.route('/stop_detection', methods=['POST'])
+def stop_detection():
+    global pose_detection_active
+    pose_detection_active = False
+    return "Pose detection stopped."
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     app.run(debug=True)
