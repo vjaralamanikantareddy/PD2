@@ -1,13 +1,10 @@
-# app.py
-
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, request
 import cv2
 import numpy as np
 import mediapipe as mp
-import os
+import base64
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
 
 # Initialize MediaPipe Pose model
 mp_pose = mp.solutions.pose
@@ -16,26 +13,29 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, model
 # Flag to indicate if pose detection is active
 pose_detection_active = False
 
-# Function to capture video frames
-def generate_frames():
-    camera = cv2.VideoCapture(0)  # Access the first camera (index 0)
-    if not camera.isOpened():
-        raise RuntimeError("Could not open camera.")
-    
-    while True:
-        success, frame = camera.read()
-        if not success:
-            raise RuntimeError("Failed to read frame from camera.")
-        
-        # Perform pose detection if active
-        if pose_detection_active:
-            frame = detect_pose(frame)
-        
-        # Encode frame to JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame_bytes = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Route to receive webcam frames from frontend
+@app.route('/send_frame', methods=['POST'])
+def receive_frame():
+    # Decode base64 string to image
+    frame_data = request.form['frame']
+    frame_bytes = base64.b64decode(frame_data)
+    nparr = np.frombuffer(frame_bytes, np.uint8)
+    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # Perform pose detection if active
+    if pose_detection_active:
+        frame = detect_pose(frame)
+
+    # Encode frame to base64 string
+    _, buffer = cv2.imencode('.jpg', frame)
+    frame_bytes = buffer.tobytes()
+    frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
+
+    return frame_base64
 
 # Function to detect poses
 def detect_pose(frame):
@@ -50,30 +50,6 @@ def detect_pose(frame):
         mp.solutions.drawing_utils.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         
     return frame
-
-# Route to render the HTML template
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-# Route to start pose detection
-@app.route('/start_detection')
-def start_detection():
-    global pose_detection_active
-    pose_detection_active = True
-    return "Pose detection started."
-
-# Route to stop pose detection
-@app.route('/stop_detection')
-def stop_detection():
-    global pose_detection_active
-    pose_detection_active = False
-    return "Pose detection stopped."
-
-# Route to serve video stream
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     app.run(debug=True)
