@@ -44,6 +44,7 @@ def index():
 def start_pose_detection():
     global pose_detection_active
     pose_detection_active = True
+    print("Pose detection started. Flag set to True.")  # Debug statement
     return "Pose detection started successfully."
 
 # Route to stop pose detection
@@ -51,6 +52,7 @@ def start_pose_detection():
 def stop_pose_detection():
     global pose_detection_active
     pose_detection_active = False
+    print("Pose detection stopped. Flag set to False.")  # Debug statement
     return "Pose detection stopped successfully."
 
 # Function to detect pose
