@@ -37,7 +37,7 @@ def generate_frames():
 # Route to render the HTML template
 @app.route('/')
 def index():
-    return render_template('index.html', pose_detection_active=pose_detection_active)
+    return render_template('index.html')
 
 # Route to start pose detection
 @app.route('/start_pose_detection')
