@@ -1,5 +1,6 @@
 mediapipe
-flask
+Flask
 numpy 
 gunicorn
-opencv-python
+opencv-python-headless
+os
