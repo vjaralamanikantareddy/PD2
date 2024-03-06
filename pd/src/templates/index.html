@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- templates/index.html -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,8 +13,8 @@
     <video id="videoElement" width="640" height="480" autoplay></video>
 
     <div>
-        <button id="startButton" onclick="startPoseDetection()">Start Pose Detection</button>
-        <button id="stopButton" onclick="stopPoseDetection()" disabled>Stop Pose Detection</button>
+        <button id="startButton" onclick="startDetection()">Start Detection</button>
+        <button id="stopButton" onclick="stopDetection()" disabled>Stop Detection</button>
     </div>
 
     <script>
@@ -31,28 +31,28 @@
                 console.error('Error accessing webcam:', error);
             });
 
-        function startPoseDetection() {
+        function startDetection() {
             startButton.disabled = true;
             stopButton.disabled = false;
-            fetch('/start_pose_detection')
+            fetch('/start_detection')
                 .then(response => {
                     if (!response.ok) {
-                        console.error('Error starting pose detection:', response.statusText);
+                        console.error('Error starting detection:', response.statusText);
                     }
                 })
-                .catch(error => console.error('Error starting pose detection:', error));
+                .catch(error => console.error('Error starting detection:', error));
         }
 
-        function stopPoseDetection() {
+        function stopDetection() {
             startButton.disabled = false;
             stopButton.disabled = true;
-            fetch('/stop_pose_detection')
+            fetch('/stop_detection')
                 .then(response => {
                     if (!response.ok) {
-                        console.error('Error stopping pose detection:', response.statusText);
+                        console.error('Error stopping detection:', response.statusText);
                     }
                 })
-                .catch(error => console.error('Error stopping pose detection:', error));
+                .catch(error => console.error('Error stopping detection:', error));
         }
     </script>
 </body>
