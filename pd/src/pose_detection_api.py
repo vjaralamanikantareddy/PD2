@@ -4,7 +4,6 @@ from flask import Flask, Response, render_template, request
 import cv2
 import numpy as np
 import mediapipe as mp
-import base64
 
 app = Flask(__name__)
 
@@ -34,13 +33,12 @@ def generate_frames():
         if pose_detection_active:
             frame = detect_pose(frame)
         
-        # Encode frame to base64 string
-        _, buffer = cv2.imencode('.jpg', frame)
+        # Encode frame to JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
-        frame_base64 = base64.b64encode(frame_bytes).decode('utf-8')
 
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_base64.encode() + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 # Function to detect poses
 def detect_pose(frame):
