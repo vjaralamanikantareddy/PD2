@@ -67,7 +67,9 @@ def detect_pose(frame, pose_model):
     if results.pose_landmarks:
         # Draw the landmarks on the frame.
         mp.solutions.drawing_utils.draw_landmarks(frame, results.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS)
-    
+    else:
+        print("No pose landmarks detected.")  # Debug statement
+        
     return frame
 
 # Route to serve video stream with pose detection
