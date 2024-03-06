@@ -3,8 +3,9 @@ import cv2
 import numpy as np
 import mediapipe as mp
 import os
-template_dir=os.path.join(os.path.dirname(__file__),'templates')
-app = Flask(__name__,template_folder=template_dir)
+
+template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+app = Flask(__name__, template_folder=template_dir)
 
 # Initializing mediapipe pose class.
 mp_pose = mp.solutions.pose
@@ -17,11 +18,14 @@ pose_detection_active = False
 
 # Function to capture video from the webcam
 def generate_frames():
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(0)  # Access the first camera (index 0)
+    if not camera.isOpened():
+        raise RuntimeError("Could not open camera.")
+    
     while True:
         success, frame = camera.read()
         if not success:
-            break
+            raise RuntimeError("Failed to read frame from camera.")
         else:
             if pose_detection_active:
                 frame = detect_pose(frame, pose)
