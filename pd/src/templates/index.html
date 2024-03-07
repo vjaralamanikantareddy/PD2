@@ -9,7 +9,6 @@
     <h1>Live Pose Detection</h1>
     
     <video id="videoElement" width="640" height="480" autoplay></video>
-    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
 
     <div>
         <button id="startButton" onclick="startDetection()">Start Detection</button>
@@ -20,49 +19,22 @@
         var video = document.getElementById('videoElement');
         var startButton = document.getElementById('startButton');
         var stopButton = document.getElementById('stopButton');
-        var canvas = document.getElementById('canvas');
-        var ctx = canvas.getContext('2d');
-
-        // Request access to webcam when the page loads
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function(stream) {
-                video.srcObject = stream;
-            })
-            .catch(function(error) {
-                console.error('Error accessing webcam:', error);
-            });
 
         function startDetection() {
             startButton.disabled = true;
             stopButton.disabled = false;
 
-            // Start sending webcam frames to backend
-            setInterval(sendFrame, 1000 / 30); // Adjust frame rate as needed
+            // Set the video source to the video_feed endpoint
+            video.src = '/video_feed';
         }
 
         function stopDetection() {
             startButton.disabled = false;
             stopButton.disabled = true;
-        }
 
-        function sendFrame() {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            var frame = canvas.toDataURL('image/jpeg', 0.8);
-
-            fetch('/send_frame', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'frame=' + encodeURIComponent(frame),
-            })
-            .then(response => response.text())
-            .then(data => {
-                var image = new Image();
-                image.src = 'data:image/jpeg;base64,' + data;
-                document.body.appendChild(image); // Display processed frame on the webpage
-            })
-            .catch(error => console.error('Error sending frame:', error));
+            // Stop the video stream
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
         }
     </script>
 </body>
