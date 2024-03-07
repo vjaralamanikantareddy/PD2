@@ -1,9 +1,7 @@
-# app.py
-
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template
 import cv2
-import numpy as np
 import mediapipe as mp
+import numpy as np
 
 app = Flask(__name__)
 
@@ -11,16 +9,9 @@ app = Flask(__name__)
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, model_complexity=1)
 
-# Flag to indicate if pose detection is active
-pose_detection_active = False
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 # Function to capture video frames
 def generate_frames():
-    camera = cv2.VideoCapture(0)  # Access the first camera (index 0)
+    camera = cv2.VideoCapture(0) # Access the first camera (index 0)
     if not camera.isOpened():
         raise RuntimeError("Could not open camera.")
     
@@ -29,9 +20,8 @@ def generate_frames():
         if not success:
             raise RuntimeError("Failed to read frame from camera.")
         
-        # Perform pose detection if active
-        if pose_detection_active:
-            frame = detect_pose(frame)
+        # Perform pose detection
+        frame = detect_pose(frame)
         
         # Encode frame to JPEG
         ret, buffer = cv2.imencode('.jpg', frame)
@@ -54,17 +44,9 @@ def detect_pose(frame):
         
     return frame
 
-@app.route('/start_detection', methods=['POST'])
-def start_detection():
-    global pose_detection_active
-    pose_detection_active = True
-    return "Pose detection started."
-
-@app.route('/stop_detection', methods=['POST'])
-def stop_detection():
-    global pose_detection_active
-    pose_detection_active = False
-    return "Pose detection stopped."
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/video_feed')
 def video_feed():
