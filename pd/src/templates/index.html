@@ -3,38 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Pose Detection</title>
+    <title>Video Feed with Pose Detection</title>
 </head>
 <body>
-    <h1>Live Pose Detection</h1>
+    <h1>Video Feed with Pose Detection</h1>
     
-    <video id="videoElement" width="640" height="480" autoplay></video>
+    <img id="videoElement" src="{{ url_for('video_feed') }}" width="640" height="480">
 
     <div>
-        <button id="startButton" onclick="startDetection()">Start Detection</button>
-        <button id="stopButton" onclick="stopDetection()" disabled>Stop Detection</button>
+        <button id="startButton" onclick="startPoseDetection()">Start Pose Detection</button>
+        <button id="stopButton" onclick="stopPoseDetection()">Stop Pose Detection</button>
     </div>
 
     <script>
-        var video = document.getElementById('videoElement');
         var startButton = document.getElementById('startButton');
         var stopButton = document.getElementById('stopButton');
 
-        function startDetection() {
-            startButton.disabled = true;
-            stopButton.disabled = false;
-
-            // Set the video source to the video_feed endpoint
-            video.src = '/video_feed';
+        function startPoseDetection() {
+            fetch('/start_pose_detection')
+                .then(response => {
+                    if (response.ok) {
+                        startButton.disabled = true;
+                        stopButton.disabled = false;
+                    }
+                })
+                .catch(error => console.error('Error starting pose detection:', error));
         }
 
-        function stopDetection() {
-            startButton.disabled = false;
-            stopButton.disabled = true;
-
-            // Stop the video stream
-            video.srcObject.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
+        function stopPoseDetection() {
+            fetch('/stop_pose_detection')
+                .then(response => {
+                    if (response.ok) {
+                        startButton.disabled = false;
+                        stopButton.disabled = true;
+                    }
+                })
+                .catch(error => console.error('Error stopping pose detection:', error));
         }
     </script>
 </body>
